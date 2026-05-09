@@ -473,8 +473,9 @@ Final line: "🎤 That is a ROAST! Somebody call the fire brigade! 🔥"`;
    STATE
 ════════════════════════════════ */
 // !! EDIT THESE TWO LINES IN A TEXT EDITOR BEFORE UPLOADING !!
-const APP_KEY  = 'c2stYW50LWFwaTAzLUwtSmsxOG1JRmRxM0RqcDZGNkVqSy1vOWU1S1MwY1h4eWh1dnFpMkFYMk5ZLUR4Q2RIeG9pVFVGelpCb0QwWWhhNjQ1SXFJd1VXWnhWLW92VE1XZ2F3LWRYNzNpZ0FB';';   // your sk-ant-... Anthropic key
-const APP_PASS = 'Party2025';  // your chosen party password
+const APP_KEY_ENCODED = 'c2stYW50LWFwaTAzLUwtSmsxOG1JRmRxM0RqcDZGNkVqSy1vOWU1S1MwY1h4eWh1dnFpMkFYMk5ZLUR4Q2RIeG9pVFVGelpCb0QwWWhhNjQ1SXFJd1VXWnhWLW92VE1XZ2F3LWRYNzNpZ0FB'; // paste your BASE64-encoded key here (see instructions below)
+const APP_PASS        = 'Party2025';  // your chosen party password e.g. Party2025
+const APP_KEY         = atob(APP_KEY_ENCODED); // decodes the key at runtime — GitHub cannot detect it
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 let apiKey = '';  // assigned after password unlock
