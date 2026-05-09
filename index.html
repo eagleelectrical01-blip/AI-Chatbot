@@ -386,6 +386,125 @@
       text-align:center; max-width:85vw;
     }
     #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* ── Hamburger button ── */
+    #hamburger-btn {
+      width:34px; height:34px; border-radius:10px;
+      background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+      cursor:pointer; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:4px;
+      transition:all 0.2s; flex-shrink:0; padding:0;
+    }
+    #hamburger-btn:active { transform:scale(0.9); }
+    .hb-line {
+      width:16px; height:2px; border-radius:2px;
+      background:var(--muted); transition:all 0.25s;
+    }
+    #hamburger-btn.open .hb-line:nth-child(1) { transform:translateY(6px) rotate(45deg); background:var(--cyan); }
+    #hamburger-btn.open .hb-line:nth-child(2) { opacity:0; }
+    #hamburger-btn.open .hb-line:nth-child(3) { transform:translateY(-6px) rotate(-45deg); background:var(--cyan); }
+
+    /* ── Voice drawer (slides in from right) ── */
+    #voice-drawer-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,0.6);
+      backdrop-filter:blur(4px); z-index:200;
+      opacity:0; pointer-events:none; transition:opacity 0.3s;
+    }
+    #voice-drawer-overlay.open { opacity:1; pointer-events:all; }
+
+    #voice-drawer {
+      position:fixed; top:0; right:0; bottom:0; width:min(320px, 92vw);
+      background:#13131f; border-left:1px solid rgba(0,245,212,0.2);
+      z-index:201; display:flex; flex-direction:column;
+      transform:translateX(100%); transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      overflow:hidden;
+    }
+    #voice-drawer.open { transform:translateX(0); }
+
+    .drawer-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 16px 12px;
+      border-bottom:1px solid rgba(0,245,212,0.15);
+      background:rgba(0,245,212,0.05);
+      flex-shrink:0;
+    }
+    .drawer-title {
+      font-family:'Bangers',cursive; font-size:1.3rem; letter-spacing:2px;
+      background:linear-gradient(135deg,var(--cyan),var(--purple));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .drawer-close {
+      width:32px; height:32px; border-radius:50%;
+      background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+      cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center;
+      color:var(--muted); transition:all 0.2s;
+    }
+    .drawer-close:hover { background:rgba(255,45,120,0.15); border-color:var(--pink); color:var(--pink); }
+
+    .drawer-body { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; }
+    .drawer-body::-webkit-scrollbar { width:3px; }
+    .drawer-body::-webkit-scrollbar-thumb { background:rgba(0,245,212,0.2); border-radius:3px; }
+
+    /* Rate & Pitch sliders */
+    .drawer-section-label {
+      font-size:0.68rem; font-weight:800; text-transform:uppercase;
+      letter-spacing:1.5px; color:var(--muted); margin-bottom:4px;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+    .slider-row input[type=range] {
+      flex:1; -webkit-appearance:none; height:4px; border-radius:4px;
+      background:linear-gradient(90deg,var(--cyan),var(--purple)); outline:none;
+    }
+    .slider-row input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+      background:#fff; border:2px solid var(--cyan); cursor:pointer;
+      box-shadow:0 0 8px rgba(0,245,212,0.4);
+    }
+    .slider-val {
+      font-family:'Bangers',cursive; font-size:0.95rem; color:var(--cyan);
+      min-width:36px; text-align:right;
+    }
+
+    /* Voice list */
+    .voice-list { display:flex; flex-direction:column; gap:7px; }
+
+    .voice-card {
+      background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+      border-radius:14px; padding:10px 12px;
+      display:flex; align-items:center; gap:10px; cursor:pointer; transition:all 0.2s;
+    }
+    .voice-card:hover { background:rgba(0,245,212,0.07); border-color:rgba(0,245,212,0.25); }
+    .voice-card.selected {
+      background:rgba(0,245,212,0.1); border-color:var(--cyan);
+      box-shadow:0 0 12px rgba(0,245,212,0.15);
+    }
+
+    .voice-info { flex:1; min-width:0; }
+    .voice-name {
+      font-size:0.85rem; font-weight:700; color:var(--text);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .voice-lang { font-size:0.7rem; color:var(--muted); font-weight:600; margin-top:2px; }
+
+    .voice-selected-badge {
+      font-size:0.65rem; font-family:'Bangers',cursive; letter-spacing:1px;
+      background:var(--cyan); color:#000; border-radius:50px; padding:2px 8px;
+      flex-shrink:0;
+    }
+
+    .voice-test-btn {
+      background:rgba(155,93,229,0.15); border:1px solid rgba(155,93,229,0.35);
+      border-radius:8px; padding:5px 10px; color:var(--purple);
+      font-family:'Nunito',sans-serif; font-size:0.75rem; font-weight:700;
+      cursor:pointer; white-space:nowrap; transition:all 0.2s; flex-shrink:0;
+    }
+    .voice-test-btn:hover { background:rgba(155,93,229,0.25); }
+    .voice-test-btn:active { transform:scale(0.95); }
+
+    .no-voices {
+      text-align:center; color:var(--muted); font-size:0.85rem;
+      font-weight:600; padding:20px; line-height:1.6;
+    }
   </style>
 </head>
 <body>
@@ -402,9 +521,49 @@
       <button class="mode-btn"        id="roast-mode-btn" onclick="setMode('roast')">🔥 Roast</button>
       <button class="mode-btn"        id="voice-mode-btn" onclick="setMode('voice')">🎙️ Voice</button>
     </div>
-    <div class="mic-anim">🎭</div>
+    <button id="hamburger-btn" onclick="toggleDrawer()" title="Voice settings">
+      <div class="hb-line"></div>
+      <div class="hb-line"></div>
+      <div class="hb-line"></div>
+    </button>
   </div>
 </header>
+
+<!-- Voice settings drawer -->
+<div id="voice-drawer-overlay" onclick="closeDrawer()"></div>
+<div id="voice-drawer">
+  <div class="drawer-header">
+    <div class="drawer-title">🎙️ Voice Settings</div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body">
+
+    <!-- Speed -->
+    <div>
+      <div class="drawer-section-label">⚡ Speech Speed</div>
+      <div class="slider-row">
+        <input type="range" id="rate-slider" min="0.5" max="2" step="0.05" value="1.05" oninput="updateRate(this.value)" />
+        <span class="slider-val" id="rate-val">1.0x</span>
+      </div>
+    </div>
+
+    <!-- Pitch -->
+    <div>
+      <div class="drawer-section-label">🎵 Pitch</div>
+      <div class="slider-row">
+        <input type="range" id="pitch-slider" min="0.5" max="2" step="0.05" value="1.1" oninput="updatePitch(this.value)" />
+        <span class="slider-val" id="pitch-val">1.1</span>
+      </div>
+    </div>
+
+    <!-- Voice list -->
+    <div class="drawer-section-label" style="margin-top:4px;">🗣️ Choose a Voice</div>
+    <div class="voice-list" id="voice-list">
+      <div class="no-voices">Loading voices...<br/>If list stays empty, try Chrome on Android.</div>
+    </div>
+
+  </div>
+</div>
 
 <!-- API Key -->
 <div id="key-banner">
@@ -988,11 +1147,183 @@ document.getElementById('user-input').addEventListener('keydown', function(e) {
 // Pre-load voices (browsers need this)
 if (speechSynth) {
   speechSynth.getVoices();
-  speechSynth.onvoiceschanged = () => speechSynth.getVoices();
+  speechSynth.onvoiceschanged = () => { speechSynth.getVoices(); populateVoiceList(); };
 }
 
 // Init speaker button state
 document.getElementById('speaker-btn').classList.add('on');
+
+/* ══════════════════════════════════════════════
+   VOICE SETTINGS — DRAWER
+══════════════════════════════════════════════ */
+let selectedVoiceIndex = parseInt(localStorage.getItem('lb_voice_idx') ?? '-1');
+let speechRate  = parseFloat(localStorage.getItem('lb_rate')  ?? '1.05');
+let speechPitch = parseFloat(localStorage.getItem('lb_pitch') ?? '1.1');
+
+// Init sliders from saved values
+document.getElementById('rate-slider').value  = speechRate;
+document.getElementById('pitch-slider').value = speechPitch;
+document.getElementById('rate-val').textContent  = speechRate.toFixed(1) + 'x';
+document.getElementById('pitch-val').textContent = speechPitch.toFixed(1);
+
+function updateRate(val) {
+  speechRate = parseFloat(val);
+  document.getElementById('rate-val').textContent = speechRate.toFixed(1) + 'x';
+  localStorage.setItem('lb_rate', speechRate);
+}
+
+function updatePitch(val) {
+  speechPitch = parseFloat(val);
+  document.getElementById('pitch-val').textContent = speechPitch.toFixed(1);
+  localStorage.setItem('lb_pitch', speechPitch);
+}
+
+function toggleDrawer() {
+  const drawer  = document.getElementById('voice-drawer');
+  const overlay = document.getElementById('voice-drawer-overlay');
+  const btn     = document.getElementById('hamburger-btn');
+  const isOpen  = drawer.classList.contains('open');
+  if (isOpen) {
+    closeDrawer();
+  } else {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    btn.classList.add('open');
+    populateVoiceList();
+  }
+}
+
+function closeDrawer() {
+  document.getElementById('voice-drawer').classList.remove('open');
+  document.getElementById('voice-drawer-overlay').classList.remove('open');
+  document.getElementById('hamburger-btn').classList.remove('open');
+}
+
+function populateVoiceList() {
+  const voices = speechSynth ? speechSynth.getVoices() : [];
+  const list   = document.getElementById('voice-list');
+
+  // Filter: English voices only, sort putting ZA/GB/AU/US first
+  const priority = ['en-ZA','en-GB','en-AU','en-US','en-IN'];
+  const engVoices = voices
+    .filter(v => v.lang.startsWith('en'))
+    .sort((a, b) => {
+      const ai = priority.indexOf(a.lang); const bi = priority.indexOf(b.lang);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
+
+  if (engVoices.length === 0) {
+    list.innerHTML = `<div class="no-voices">No voices found yet.<br/>On Android: open Chrome, say something in Voice Mode first, then reopen this menu.<br/>On iOS: voices load after a page interaction.</div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  engVoices.forEach((voice, idx) => {
+    // Find original index in full voices array (needed for selection)
+    const origIdx = voices.indexOf(voice);
+    const isSelected = origIdx === selectedVoiceIndex;
+
+    const langFlag = { 'en-ZA':'🇿🇦','en-GB':'🇬🇧','en-AU':'🇦🇺','en-US':'🇺🇸','en-IN':'🇮🇳','en-IE':'🇮🇪','en-CA':'🇨🇦' };
+    const flag = langFlag[voice.lang] || '🌍';
+
+    const card = document.createElement('div');
+    card.className = `voice-card${isSelected ? ' selected' : ''}`;
+    card.innerHTML = `
+      <div style="font-size:1.4rem;flex-shrink:0;">${flag}</div>
+      <div class="voice-info">
+        <div class="voice-name">${voice.name}</div>
+        <div class="voice-lang">${voice.lang}${voice.localService ? ' · on-device' : ' · online'}</div>
+      </div>
+      ${isSelected ? '<span class="voice-selected-badge">ACTIVE</span>' : ''}
+      <button class="voice-test-btn" onclick="testVoice(${origIdx}, event)">▶ Test</button>
+    `;
+    card.onclick = (e) => {
+      if (e.target.classList.contains('voice-test-btn')) return;
+      selectVoice(origIdx);
+    };
+    list.appendChild(card);
+  });
+}
+
+function selectVoice(origIdx) {
+  selectedVoiceIndex = origIdx;
+  localStorage.setItem('lb_voice_idx', origIdx);
+  stopSpeaking();
+  populateVoiceList();
+  const voice = speechSynth.getVoices()[origIdx];
+  showToast(`✅ Voice: ${voice?.name || 'selected'}`);
+}
+
+function testVoice(origIdx, e) {
+  e.stopPropagation();
+  const voice = speechSynth?.getVoices()[origIdx];
+  if (!voice || !speechSynth) return;
+  stopSpeaking();
+  const utt = new SpeechSynthesisUtterance("Ha! Why did the electrician break up with his girlfriend? She gave him too many shocks!");
+  utt.voice = voice;
+  utt.rate  = speechRate;
+  utt.pitch = speechPitch;
+  utt.volume = 1;
+  speechSynth.speak(utt);
+}
+
+// Patch the speak() function to use selected voice + saved rate/pitch
+const _origSpeak = speak;
+speak = function(text) {
+  if (!speakerOn || !speechSynth) return;
+
+  const clean = text
+    .replace(/[🎤🔥😂😏🎉🇿🇦🕯️🚗💡😩⚡🌶️👔😅🎧🥩💪😬🎙️🌍🇬🇧🇦🇺🇺🇸🇮🇳]/gu, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
+    .replace(/🎤 \*[^*]*\*/g, '').replace(/\n/g, ' ').trim();
+  if (!clean) return;
+
+  stopSpeaking();
+
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.rate   = speechRate;
+  utt.pitch  = speechPitch;
+  utt.volume = 1;
+
+  const voices = speechSynth.getVoices();
+  if (selectedVoiceIndex >= 0 && voices[selectedVoiceIndex]) {
+    utt.voice = voices[selectedVoiceIndex];
+  } else {
+    // Auto-pick best English voice
+    const preferred = voices.find(v => v.lang === 'en-ZA')
+                   || voices.find(v => v.lang.startsWith('en-GB'))
+                   || voices.find(v => v.lang.startsWith('en-AU'))
+                   || voices.find(v => v.lang.startsWith('en'));
+    if (preferred) utt.voice = preferred;
+  }
+
+  utt.onstart = () => {
+    isSpeaking = true;
+    document.getElementById('voice-orb').textContent = '🔊';
+    document.getElementById('voice-orb').style.borderColor = 'var(--neon)';
+    document.getElementById('voice-orb').style.boxShadow = '0 0 30px rgba(247,226,51,0.5)';
+    document.getElementById('voice-status').textContent = 'TALKING...';
+    document.getElementById('voice-status').style.color = 'var(--neon)';
+    document.getElementById('voice-wave').style.display = 'flex';
+    const bubbles = document.querySelectorAll('.bubble-wrap.bot');
+    if (bubbles.length) bubbles[bubbles.length-1].classList.add('speaking');
+  };
+  utt.onend = utt.onerror = () => {
+    isSpeaking = false;
+    document.getElementById('voice-orb').textContent = '🎙️';
+    document.getElementById('voice-orb').style.borderColor = 'rgba(0,245,212,0.4)';
+    document.getElementById('voice-orb').style.boxShadow = '0 0 30px rgba(0,245,212,0.2)';
+    document.getElementById('voice-status').textContent = 'TAP ORB TO SPEAK';
+    document.getElementById('voice-status').style.color = 'var(--cyan)';
+    document.getElementById('voice-wave').style.display = 'none';
+    document.querySelectorAll('.bubble-wrap.bot.speaking').forEach(b => b.classList.remove('speaking'));
+    if (currentMode === 'voice' && speakerOn) {
+      setTimeout(() => { if (!isLoading) startListening(); }, 400);
+    }
+  };
+  speechSynth.speak(utt);
+};
+
 </script>
 </body>
 </html>
