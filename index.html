@@ -64,26 +64,46 @@ body.voice-active .mode-btn.active{background:linear-gradient(135deg,var(--cyan)
 #hamburger-btn.open .hb-line:nth-child(2){opacity:0;}
 #hamburger-btn.open .hb-line:nth-child(3){transform:translateY(-6px) rotate(-45deg);background:var(--cyan);}
 
-/* ── API KEY BANNER (always editable) ── */
-#key-banner{
-  flex-shrink:0;z-index:10;position:relative;
-  background:linear-gradient(135deg,rgba(247,226,51,.1),rgba(255,45,120,.07));
-  border-bottom:1px solid rgba(247,226,51,.18);
-  padding:8px 12px;display:flex;gap:7px;align-items:center;
+/* ── PASSWORD LOCK SCREEN ── */
+#lock-screen{
+  position:fixed;inset:0;z-index:1000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--bg);padding:30px 24px;
 }
-#key-label{font-size:.68rem;color:var(--muted);font-weight:700;white-space:nowrap;text-transform:uppercase;letter-spacing:1px;}
-#api-key-input{
-  flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(247,226,51,.3);
-  border-radius:10px;padding:6px 10px;color:var(--text);
-  font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;
-  /* always editable — no readonly */
+#lock-screen::before{
+  content:"";position:fixed;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%,rgba(155,93,229,.25) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 40% at 10% 90%,rgba(255,45,120,.2) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 40% at 50% 50%,rgba(247,226,51,.07) 0%,transparent 70%);
 }
-#api-key-input:focus{border-color:var(--neon);}
-#api-key-input::placeholder{color:var(--muted);}
-#api-key-input.saved{border-color:rgba(0,245,212,.5);background:rgba(0,245,212,.05);}
-.key-btn{background:var(--neon);color:#000;border:none;border-radius:10px;padding:6px 11px;font-family:'Bangers',cursive;font-size:.9rem;letter-spacing:1px;cursor:pointer;white-space:nowrap;}
-#clear-key-btn{background:rgba(255,45,120,.15);border:1px solid rgba(255,45,120,.3);color:var(--pink);border-radius:10px;padding:6px 9px;font-size:.8rem;cursor:pointer;white-space:nowrap;font-weight:700;}
-#clear-key-btn:active{transform:scale(.92);}
+#lock-screen.hidden{display:none;}
+.lock-inner{position:relative;z-index:1;width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:18px;}
+.lock-emoji{font-size:4rem;animation:bounceLock 2s ease-in-out infinite;}
+@keyframes bounceLock{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-8px) rotate(5deg);}}
+.lock-title{font-family:"Bangers",cursive;font-size:2.4rem;letter-spacing:3px;background:linear-gradient(135deg,var(--neon),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;}
+.lock-sub{font-size:.85rem;font-weight:700;color:var(--muted);text-align:center;line-height:1.6;}
+.lock-field-wrap{width:100%;position:relative;}
+#lock-password{
+  width:100%;background:rgba(255,255,255,.07);
+  border:2px solid rgba(247,226,51,.3);border-radius:16px;
+  padding:14px 50px 14px 18px;color:var(--text);
+  font-family:"Nunito",sans-serif;font-size:1.1rem;font-weight:700;
+  outline:none;text-align:center;letter-spacing:3px;transition:border-color .2s;
+}
+#lock-password:focus{border-color:var(--neon);}
+#lock-password::placeholder{letter-spacing:1px;color:var(--muted);}
+#lock-password.wrong{border-color:var(--pink);animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
+#toggle-pw{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px;}
+#unlock-btn{
+  width:100%;background:linear-gradient(135deg,var(--neon),#f0c800);
+  border:none;border-radius:16px;padding:15px;
+  font-family:"Bangers",cursive;font-size:1.4rem;letter-spacing:3px;color:#000;
+  cursor:pointer;box-shadow:0 0 30px rgba(247,226,51,.4);transition:transform .15s,box-shadow .15s;
+}
+#unlock-btn:active{transform:scale(.97);}
+.lock-hint{font-size:.75rem;color:var(--muted);font-weight:600;text-align:center;}
 
 /* ── PANEL AREA (chips / roast / voice) — scrollable with messages ── */
 #panel-area{flex-shrink:0;position:relative;z-index:10;}
@@ -290,12 +310,19 @@ body.voice-active #send-btn{background:linear-gradient(135deg,var(--cyan),var(--
   </div>
 </header>
 
-<!-- API KEY — always editable -->
-<div id="key-banner">
-  <span id="key-label">🔑</span>
-  <input type="password" id="api-key-input" placeholder="Paste Anthropic key  sk-ant-..." autocomplete="off" spellcheck="false"/>
-  <button id="clear-key-btn" onclick="clearKey()" title="Clear key">✕</button>
-  <button class="key-btn" onclick="saveKey()">SAVE</button>
+<!-- PASSWORD LOCK SCREEN -->
+<div id="lock-screen">
+  <div class="lock-inner">
+    <span class="lock-emoji">🎤</span>
+    <div class="lock-title">LaughBot</div>
+    <div class="lock-sub">The World's Funniest AI 😂<br/>Enter the party password to begin</div>
+    <div class="lock-field-wrap">
+      <input type="password" id="lock-password" placeholder="Password..." autocomplete="off" spellcheck="false"/>
+      <button id="toggle-pw" onclick="togglePwVis()" tabindex="-1">👁</button>
+    </div>
+    <button id="unlock-btn" onclick="tryUnlock()">🎉 LET ME IN!</button>
+    <div class="lock-hint">Contact the host if you need the password</div>
+  </div>
 </div>
 
 <!-- PANEL AREA -->
@@ -445,7 +472,12 @@ Final line: "🎤 That is a ROAST! Somebody call the fire brigade! 🔥"`;
 /* ════════════════════════════════
    STATE
 ════════════════════════════════ */
-let apiKey       = localStorage.getItem('lb_key')||'';
+// !! EDIT THESE TWO LINES IN A TEXT EDITOR BEFORE UPLOADING !!
+const APP_KEY  = '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';   // your sk-ant-... Anthropic key
+const APP_PASS = 'Party2025';  // your chosen party password
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+let apiKey = '';  // assigned after password unlock
 let isLoading    = false;
 let currentMode  = 'chat';
 let speakerOn    = true;
@@ -463,10 +495,7 @@ const SS         = window.speechSynthesis;
 /* ════════════════════════════════
    INIT
 ════════════════════════════════ */
-if(apiKey){
-  const inp=document.getElementById('api-key-input');
-  inp.value=apiKey; inp.classList.add('saved');
-}
+// key set via password unlock
 document.getElementById('rate-slider').value=speechRate;
 document.getElementById('pitch-slider').value=speechPitch;
 document.getElementById('rate-val').textContent=speechRate.toFixed(1)+'x';
@@ -493,29 +522,36 @@ if(window.visualViewport){
   });
 }
 
-/* ════════════════════════════════
-   API KEY
-════════════════════════════════ */
-function saveKey(){
-  const val=document.getElementById('api-key-input').value.trim();
-  if(!val.startsWith('sk-ant-')&&!val.startsWith('sk-')){
-    showToast("⚠️ Doesn't look like an Anthropic key!"); return;
+/* LOCK SCREEN LOGIC */
+function tryUnlock(){
+  const entered=document.getElementById('lock-password').value;
+  if(entered===APP_PASS){
+    apiKey=APP_KEY;
+    sessionStorage.setItem('lb_unlocked','1');
+    document.getElementById('lock-screen').classList.add('hidden');
+    addBotMsg("OH SNAP! 🎉 I'm LaughBot — funniest AI on Earth. Throw me a word, roast someone, or go Voice Mode! 🎤 *drops mic... picks it back up for more* 😏",false);
+    if(speakerOn)speak("OH SNAP! I am LaughBot, funniest AI on Earth! Let's get this party started!");
+  }else{
+    const inp=document.getElementById('lock-password');
+    inp.classList.add('wrong');
+    inp.value='';
+    showToast('❌ Wrong password! Try again 😅');
+    setTimeout(()=>inp.classList.remove('wrong'),500);
   }
-  apiKey=val; localStorage.setItem('lb_key',apiKey);
-  document.getElementById('api-key-input').classList.add('saved');
-  showToast('✅ Key saved! Party time! 🎉');
-  removeWelcome();
-  addBotMsg("OH SNAP! 🎉 I'm LaughBot — funniest AI on Earth. Throw me a word, roast someone, or go Voice Mode! 🎤 *drops mic... picks it back up for more* 😏",false);
-  if(speakerOn)speak("OH SNAP! I am LaughBot, funniest AI on Earth! Let's get this party started!");
 }
-function clearKey(){
-  document.getElementById('api-key-input').value='';
-  document.getElementById('api-key-input').classList.remove('saved');
-  document.getElementById('api-key-input').focus();
-  apiKey=''; localStorage.removeItem('lb_key');
-  showToast('🔑 Key cleared — paste a new one');
+function togglePwVis(){
+  const inp=document.getElementById('lock-password');
+  const btn=document.getElementById('toggle-pw');
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
+  else{inp.type='password';btn.textContent='👁';}
 }
-
+// Auto-unlock if already unlocked this session
+if(sessionStorage.getItem('lb_unlocked')==='1'){
+  apiKey=APP_KEY;
+  document.getElementById('lock-screen').classList.add('hidden');
+}
+// Enter key on password field
+document.getElementById('lock-password').addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock();});
 /* ════════════════════════════════
    MODE
 ════════════════════════════════ */
@@ -604,7 +640,7 @@ function initRec(){
   r.onend=()=>{isListening=false;setListenUI(false);};
   return r;
 }
-function toggleListening(){if(!apiKey){showToast('⚠️ Enter your API key first!');return;}if(isSpeaking){stopSpeaking();return;}isListening?stopListening():startListening();}
+function toggleListening(){if(!apiKey){showToast('⚠️ Unlock the app first!');return;}if(isSpeaking){stopSpeaking();return;}isListening?stopListening():startListening();}
 function startListening(){stopSpeaking();recognition=initRec();if(!recognition)return;const tr=document.getElementById('voice-transcript');if(tr)tr.textContent='Listening...';recognition.start();}
 function stopListening(){if(recognition){try{recognition.abort();}catch(e){}recognition=null;}isListening=false;setListenUI(false);}
 function setListenUI(on){
@@ -630,7 +666,7 @@ function updateIntensity(v){document.getElementById('intensity-label').textConte
 
 async function fireRoast(){
   if(isLoading)return;
-  if(!apiKey){showToast('⚠️ Enter your API key first!');return;}
+  if(!apiKey){showToast('⚠️ Unlock the app first!');return;}
   const name=document.getElementById('victim-name').value.trim()||'this person';
   const job=document.getElementById('victim-job').value.trim();
   const desc=document.getElementById('victim-desc').value.trim();
@@ -657,7 +693,7 @@ async function sendMessage(){
   if(isLoading)return;
   const input=document.getElementById('user-input');
   const text=input.value.trim(); if(!text)return;
-  if(!apiKey){showToast('⚠️ Enter your API key first!');return;}
+  if(!apiKey){showToast('⚠️ Unlock the app first!');return;}
   input.value='';input.style.height='auto';
   removeWelcome(); stopSpeaking(); addUserBubble(text);
   const isVoice=currentMode==='voice';
