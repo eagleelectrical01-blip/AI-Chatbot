@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="LaughBot 🎤" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>LaughBot 🎤 — The World's Funniest AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card: #1c1c2e;
+      --neon: #f7e233;
+      --pink: #ff2d78;
+      --cyan: #00f5d4;
+      --purple: #9b5de5;
+      --fire: #ff6b00;
+      --fire2: #ff2d78;
+      --text: #f0f0f8;
+      --muted: #7a7a9a;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(155,93,229,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 10% 90%, rgba(255,45,120,0.14) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(0,245,212,0.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0; transition: background 0.5s;
+    }
+
+    body.roast-mode::before {
+      background:
+        radial-gradient(ellipse 60% 40% at 80% 10%, rgba(255,107,0,0.25) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 10% 90%, rgba(255,45,120,0.2) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(255,107,0,0.08) 0%, transparent 70%);
+    }
+
+    body.voice-active::before {
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 50%, rgba(0,245,212,0.2) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 80% 20%, rgba(155,93,229,0.15) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 20% 80%, rgba(247,226,51,0.1) 0%, transparent 70%);
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 12px 9px;
+      background: rgba(13,13,25,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(247,226,51,0.15);
+    }
+
+    .logo {
+      font-family: 'Bangers', cursive; font-size: 1.7rem;
+      letter-spacing: 2px; line-height: 1;
+      background: linear-gradient(135deg, var(--neon), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    body.roast-mode .logo { background: linear-gradient(135deg, var(--fire), var(--fire2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    body.voice-active .logo { background: linear-gradient(135deg, var(--cyan), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .tagline { font-size: 0.63rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+
+    /* Mode toggle */
+    .mode-toggle {
+      display: flex; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 50px; padding: 3px; gap: 1px;
+    }
+
+    .mode-btn {
+      border: none; background: transparent; color: var(--muted);
+      font-family: 'Bangers', cursive; font-size: 0.78rem; letter-spacing: 0.8px;
+      padding: 5px 10px; border-radius: 50px; cursor: pointer; transition: all 0.25s; white-space: nowrap;
+    }
+    .mode-btn.active { background: linear-gradient(135deg, var(--neon), #f0c800); color: #000; }
+    body.roast-mode .mode-btn.active { background: linear-gradient(135deg, var(--fire), var(--fire2)); color: #fff; }
+    body.voice-active .mode-btn.active { background: linear-gradient(135deg, var(--cyan), var(--purple)); color: #000; }
+
+    /* Speaker toggle */
+    #speaker-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    #speaker-btn.on { background: rgba(0,245,212,0.15); border-color: var(--cyan); }
+    #speaker-btn:active { transform: scale(0.9); }
+
+    .mic-anim { font-size: 1.4rem; animation: bounce 2s ease-in-out infinite; }
+    @keyframes bounce { 0%,100%{transform:translateY(0) rotate(-5deg);} 50%{transform:translateY(-5px) rotate(5deg);} }
+
+    /* ── API Key ── */
+    #key-banner {
+      position: relative; z-index: 10;
+      background: linear-gradient(135deg, rgba(247,226,51,0.1), rgba(255,45,120,0.07));
+      border-bottom: 1px solid rgba(247,226,51,0.18);
+      padding: 9px 13px; display: flex; gap: 7px; align-items: center;
+    }
+    #key-banner input {
+      flex: 1; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(247,226,51,0.3); border-radius: 10px;
+      padding: 7px 11px; color: var(--text); font-family: 'Nunito', sans-serif; font-size: 0.82rem; outline: none;
+    }
+    #key-banner input:focus { border-color: var(--neon); }
+    #key-banner input::placeholder { color: var(--muted); }
+    #key-banner button {
+      background: var(--neon); color: #000; border: none; border-radius: 10px;
+      padding: 7px 12px; font-family: 'Bangers', cursive; font-size: 0.95rem; letter-spacing: 1px; cursor: pointer;
+    }
+    #key-label { font-size: 0.7rem; color: var(--muted); font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── Messages ── */
+    #messages {
+      flex: 1; overflow-y: auto; padding: 13px 12px;
+      display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 1;
+    }
+    #messages::-webkit-scrollbar { width: 3px; }
+    #messages::-webkit-scrollbar-thumb { background: rgba(247,226,51,0.2); border-radius: 3px; }
+
+    .bubble-wrap { display: flex; flex-direction: column; gap: 3px; animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes popIn { from{opacity:0;transform:scale(0.85) translateY(10px);} to{opacity:1;transform:scale(1) translateY(0);} }
+
+    .bubble-wrap.user { align-items: flex-end; }
+    .bubble-wrap.bot  { align-items: flex-start; }
+
+    .bubble {
+      max-width: 84%; padding: 11px 15px; border-radius: var(--radius);
+      font-size: 0.92rem; line-height: 1.55; font-weight: 600;
+    }
+    .bubble-wrap.user .bubble { background: linear-gradient(135deg, var(--purple), var(--pink)); border-bottom-right-radius: 4px; color: #fff; }
+    .bubble-wrap.bot .bubble { background: var(--card); border: 1px solid rgba(247,226,51,0.12); border-bottom-left-radius: 4px; }
+    .bubble-wrap.bot.roast .bubble {
+      background: linear-gradient(var(--card),var(--card)) padding-box,
+                  linear-gradient(135deg,var(--fire),var(--fire2),var(--neon)) border-box;
+      border: 2px solid transparent; border-bottom-left-radius: 4px;
+    }
+
+    .sender-name { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); }
+
+    /* Typing */
+    .typing-bubble {
+      display: flex; align-items: center; gap: 6px; background: var(--card);
+      border: 1px solid rgba(247,226,51,0.12); border-radius: var(--radius); border-bottom-left-radius: 4px; padding: 12px 16px;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon); animation: dotPulse 1.2s ease-in-out infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; background: var(--pink); }
+    .dot:nth-child(3) { animation-delay: 0.4s; background: var(--cyan); }
+    @keyframes dotPulse { 0%,80%,100%{transform:scale(0.7);opacity:0.5;} 40%{transform:scale(1.2);opacity:1;} }
+
+    /* Chips */
+    #chat-suggestions { position:relative; z-index:10; display:flex; gap:7px; padding:5px 12px; overflow-x:auto; }
+    #chat-suggestions::-webkit-scrollbar { display:none; }
+    .suggestion-chip {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(0,245,212,0.25); border-radius: 50px;
+      padding: 5px 12px; font-family:'Nunito',sans-serif; font-size:0.77rem; font-weight:700;
+      color: var(--cyan); cursor:pointer; white-space:nowrap; transition:all 0.2s;
+    }
+    .suggestion-chip:active { background: rgba(0,245,212,0.12); transform:scale(1.04); }
+
+    /* ── ROAST PANEL ── */
+    #roast-panel {
+      position:relative; z-index:10; display:none; flex-direction:column; gap:8px;
+      padding:10px 13px;
+      background: rgba(255,107,0,0.06);
+      border-top: 1px solid rgba(255,107,0,0.25); border-bottom: 1px solid rgba(255,107,0,0.25);
+    }
+    body.roast-mode #roast-panel { display:flex; }
+    body.roast-mode #chat-suggestions { display:none; }
+    body.voice-active #chat-suggestions { display:none; }
+
+    .roast-panel-title { font-family:'Bangers',cursive; font-size:1rem; letter-spacing:2px; color:var(--fire); text-align:center; }
+
+    .victim-chips { display:flex; gap:6px; overflow-x:auto; }
+    .victim-chips::-webkit-scrollbar { display:none; }
+    .victim-chip {
+      background:rgba(255,107,0,0.1); border:1px solid rgba(255,107,0,0.3); border-radius:50px;
+      padding:4px 11px; font-size:0.75rem; font-weight:700; color:var(--fire); cursor:pointer; white-space:nowrap; transition:all 0.2s;
+    }
+    .victim-chip:active { background:rgba(255,107,0,0.22); transform:scale(1.04); }
+
+    .roast-fields { display:flex; gap:8px; }
+    .roast-fields input {
+      flex:1; background:rgba(255,255,255,0.06); border:1px solid rgba(255,107,0,0.35); border-radius:12px;
+      padding:8px 12px; color:var(--text); font-family:'Nunito',sans-serif; font-size:0.85rem; font-weight:700; outline:none;
+    }
+    .roast-fields input:focus { border-color:var(--fire); }
+    .roast-fields input::placeholder { color:var(--muted); }
+
+    .roast-desc {
+      background:rgba(255,255,255,0.06); border:1px solid rgba(255,107,0,0.35); border-radius:12px;
+      padding:8px 12px; color:var(--text); font-family:'Nunito',sans-serif; font-size:0.85rem; font-weight:600;
+      outline:none; resize:none; height:54px; width:100%;
+    }
+    .roast-desc:focus { border-color:var(--fire); }
+    .roast-desc::placeholder { color:var(--muted); }
+
+    .intensity-row { display:flex; align-items:center; gap:10px; }
+    .intensity-label { font-size:0.7rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; white-space:nowrap; }
+    .intensity-slider {
+      flex:1; -webkit-appearance:none; height:5px; border-radius:5px;
+      background:linear-gradient(90deg,#f7e233,#ff6b00,#ff2d78); outline:none;
+    }
+    .intensity-slider::-webkit-slider-thumb {
+      -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+      background:#fff; border:3px solid var(--fire); cursor:pointer; box-shadow:0 0 10px rgba(255,107,0,0.5);
+    }
+    .intensity-val { font-family:'Bangers',cursive; font-size:0.9rem; letter-spacing:1px; min-width:75px; text-align:right; color:var(--fire); }
+
+    #roast-fire-btn {
+      width:100%; background:linear-gradient(135deg,var(--fire),var(--fire2)); border:none; border-radius:14px;
+      padding:12px; font-family:'Bangers',cursive; font-size:1.2rem; letter-spacing:3px; color:#fff;
+      cursor:pointer; box-shadow:0 4px 20px rgba(255,107,0,0.4); transition:transform 0.15s;
+    }
+    #roast-fire-btn:active { transform:scale(0.97); }
+    #roast-fire-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+    /* ── VOICE PANEL ── */
+    #voice-panel {
+      position:relative; z-index:10; display:none; flex-direction:column;
+      align-items:center; gap:14px; padding:20px 20px 16px;
+      background:rgba(0,245,212,0.04);
+      border-top:1px solid rgba(0,245,212,0.2); border-bottom:1px solid rgba(0,245,212,0.2);
+    }
+    body.voice-active #voice-panel { display:flex; }
+    body.voice-active #roast-panel { display:none; }
+
+    .voice-orb-wrap { position:relative; display:flex; align-items:center; justify-content:center; width:110px; height:110px; }
+
+    .voice-orb {
+      width:80px; height:80px; border-radius:50%;
+      background:linear-gradient(135deg, rgba(0,245,212,0.2), rgba(155,93,229,0.2));
+      border:2px solid rgba(0,245,212,0.4);
+      display:flex; align-items:center; justify-content:center;
+      font-size:2.2rem; cursor:pointer; position:relative; z-index:2;
+      transition:all 0.3s; box-shadow: 0 0 30px rgba(0,245,212,0.2);
+    }
+    .voice-orb:hover { box-shadow: 0 0 40px rgba(0,245,212,0.4); }
+
+    /* Ripple rings when listening */
+    .ring {
+      position:absolute; border-radius:50%; border:2px solid rgba(0,245,212,0.35);
+      animation:ringPulse 2s ease-out infinite; opacity:0;
+    }
+    .ring1 { width:90px; height:90px; animation-delay:0s; }
+    .ring2 { width:105px; height:105px; animation-delay:0.5s; }
+    .ring3 { width:120px; height:120px; animation-delay:1s; }
+
+    @keyframes ringPulse {
+      0%   { transform:scale(0.8); opacity:0.7; }
+      100% { transform:scale(1.4); opacity:0; }
+    }
+
+    /* Bot speaking wave */
+    .voice-wave {
+      display:flex; align-items:center; gap:4px; height:40px;
+    }
+    .wave-bar {
+      width:5px; border-radius:3px;
+      background:linear-gradient(180deg, var(--cyan), var(--purple));
+      animation:waveBounce 0.8s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(1){height:12px;animation-delay:0s;}
+    .wave-bar:nth-child(2){height:26px;animation-delay:0.1s;}
+    .wave-bar:nth-child(3){height:38px;animation-delay:0.2s;}
+    .wave-bar:nth-child(4){height:26px;animation-delay:0.3s;}
+    .wave-bar:nth-child(5){height:14px;animation-delay:0.4s;}
+    .wave-bar:nth-child(6){height:30px;animation-delay:0.15s;}
+    .wave-bar:nth-child(7){height:20px;animation-delay:0.35s;}
+
+    @keyframes waveBounce {
+      0%,100%{transform:scaleY(0.4);}
+      50%{transform:scaleY(1);}
+    }
+
+    .voice-status {
+      font-family:'Bangers',cursive; font-size:1rem; letter-spacing:2px;
+      color:var(--cyan); text-align:center;
+    }
+    .voice-hint { font-size:0.75rem; color:var(--muted); font-weight:700; text-align:center; line-height:1.5; }
+
+    .voice-transcript {
+      background:rgba(0,245,212,0.07); border:1px solid rgba(0,245,212,0.2);
+      border-radius:12px; padding:8px 14px; width:100%; min-height:36px;
+      font-size:0.85rem; font-weight:600; color:var(--text); text-align:center;
+      font-style:italic;
+    }
+
+    /* ── Input bar ── */
+    #input-area {
+      position:relative; z-index:10; padding:9px 12px 13px;
+      background:rgba(13,13,25,0.92); backdrop-filter:blur(16px);
+      border-top:1px solid rgba(247,226,51,0.1);
+      display:flex; gap:8px; align-items:flex-end;
+    }
+    body.roast-mode #input-area { border-top-color:rgba(255,107,0,0.2); }
+    body.voice-active #input-area { border-top-color:rgba(0,245,212,0.2); }
+
+    #user-input {
+      flex:1; background:var(--card); border:1px solid rgba(247,226,51,0.2); border-radius:15px;
+      padding:10px 14px; color:var(--text); font-family:'Nunito',sans-serif; font-size:0.92rem; font-weight:600;
+      resize:none; min-height:44px; max-height:120px; outline:none; line-height:1.4; transition:border-color 0.2s;
+    }
+    #user-input:focus { border-color:var(--neon); }
+    body.roast-mode #user-input:focus { border-color:var(--fire); }
+    body.voice-active #user-input:focus { border-color:var(--cyan); }
+    #user-input::placeholder { color:var(--muted); }
+
+    /* Mic button */
+    #mic-btn {
+      width:44px; height:44px; min-width:44px; border-radius:50%;
+      background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      font-size:1.1rem; transition:all 0.2s;
+    }
+    #mic-btn.listening {
+      background:rgba(255,45,120,0.25); border-color:var(--pink);
+      box-shadow:0 0 20px rgba(255,45,120,0.4);
+      animation:micPulse 1s ease-in-out infinite;
+    }
+    @keyframes micPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+    #mic-btn:disabled { opacity:0.35; cursor:not-allowed; }
+
+    #send-btn {
+      width:44px; height:44px; min-width:44px; border-radius:50%;
+      background:linear-gradient(135deg,var(--neon),#f0c800); border:none; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; font-size:1.15rem;
+      box-shadow:0 0 18px rgba(247,226,51,0.35); transition:transform 0.15s;
+    }
+    body.roast-mode #send-btn { background:linear-gradient(135deg,var(--fire),var(--fire2)); box-shadow:0 0 18px rgba(255,107,0,0.4); }
+    body.voice-active #send-btn { background:linear-gradient(135deg,var(--cyan),var(--purple)); box-shadow:0 0 18px rgba(0,245,212,0.35); }
+    #send-btn:active { transform:scale(0.93); }
+    #send-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+    /* Welcome */
+    #welcome { text-align:center; padding:26px 20px; animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+    #welcome .big-emoji { font-size:3.5rem; display:block; margin-bottom:8px; }
+    #welcome h2 {
+      font-family:'Bangers',cursive; font-size:2rem; letter-spacing:2px;
+      background:linear-gradient(135deg,var(--neon),var(--pink));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:7px;
+    }
+    #welcome p { color:var(--muted); font-size:0.85rem; font-weight:600; max-width:270px; margin:0 auto; line-height:1.65; }
+
+    .roast-tag {
+      display:inline-flex; align-items:center; gap:4px;
+      background:linear-gradient(135deg,var(--fire),var(--fire2)); border-radius:50px;
+      padding:3px 10px; font-size:0.67rem; font-family:'Bangers',cursive; letter-spacing:1.5px; color:#fff; margin-bottom:4px;
+    }
+
+    /* Speaking indicator on bot bubble */
+    .bubble-wrap.bot.speaking .bubble {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0,245,212,0.25);
+    }
+
+    /* Toast */
+    #toast {
+      position:fixed; bottom:84px; left:50%;
+      transform:translateX(-50%) translateY(20px);
+      background:var(--pink); color:#fff; padding:7px 16px;
+      border-radius:50px; font-size:0.79rem; font-weight:700;
+      opacity:0; pointer-events:none; transition:all 0.3s; z-index:100;
+      text-align:center; max-width:85vw;
+    }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo" id="header-logo">🎤 LaughBot</div>
+    <div class="tagline" id="header-tag">World's Funniest AI</div>
+  </div>
+  <div class="header-right">
+    <button id="speaker-btn" onclick="toggleSpeaker()" title="Toggle voice output">🔊</button>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="chat-mode-btn"  onclick="setMode('chat')">💬 Chat</button>
+      <button class="mode-btn"        id="roast-mode-btn" onclick="setMode('roast')">🔥 Roast</button>
+      <button class="mode-btn"        id="voice-mode-btn" onclick="setMode('voice')">🎙️ Voice</button>
+    </div>
+    <div class="mic-anim">🎭</div>
+  </div>
+</header>
+
+<!-- API Key -->
+<div id="key-banner">
+  <span id="key-label">API Key</span>
+  <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off" />
+  <button onclick="saveKey()">SAVE 🔑</button>
+</div>
+
+<!-- Messages -->
+<div id="messages">
+  <div id="welcome">
+    <span class="big-emoji">😂</span>
+    <h2>Ready to Party?</h2>
+    <p>💬 <strong>Chat</strong> — jokes on anything<br/>
+       🔥 <strong>Roast</strong> — destroy your friends<br/>
+       🎙️ <strong>Voice</strong> — talk to me, I'll talk back!<br/><br/>
+       Enter your API key above to begin!</p>
+  </div>
+</div>
+
+<!-- Chat suggestion chips -->
+<div id="chat-suggestions">
+  <button class="suggestion-chip" onclick="quickSend('Tell me a joke about South Africa')">🇿🇦 SA Joke</button>
+  <button class="suggestion-chip" onclick="quickSend('Make a joke about braai')">🔥 Braai</button>
+  <button class="suggestion-chip" onclick="quickSend('Pun about load shedding')">🕯️ Load Shedding</button>
+  <button class="suggestion-chip" onclick="quickSend('Roast the concept of Mondays')">😩 Mondays</button>
+  <button class="suggestion-chip" onclick="quickSend('Joke about traffic jams')">🚗 Traffic</button>
+  <button class="suggestion-chip" onclick="quickSend('Make a joke about Eskom')">💡 Eskom</button>
+</div>
+
+<!-- Roast panel -->
+<div id="roast-panel">
+  <div class="roast-panel-title">🔥 CHOOSE YOUR VICTIM 🔥</div>
+  <div class="victim-chips">
+    <button class="victim-chip" onclick="fillVictim('The Boss','Always late to meetings but yells when others are late, drinks 10 coffees a day, just forwards emails with FYI')">👔 The Boss</button>
+    <button class="victim-chip" onclick="fillVictim('Best Friend','Always borrowing money and never pays back, thinks they can sing but cannot, always 30 minutes late')">😅 Best Friend</button>
+    <button class="victim-chip" onclick="fillVictim('The DJ','Plays the same 3 songs on repeat, takes forever to find the next track, thinks they are famous')">🎧 The DJ</button>
+    <button class="victim-chip" onclick="fillVictim('That One Uncle','Has an opinion on everything, tells the same braai story every year, thinks he knows cars')">🥩 That Uncle</button>
+    <button class="victim-chip" onclick="fillVictim('The Gym Bro','Talks about protein all day, flexes in every mirror, posts gym selfies before sunrise')">💪 Gym Bro</button>
+    <button class="victim-chip" onclick="fillVictim('Myself','I volunteered to be roasted tonight at this party')">😬 Roast Me</button>
+  </div>
+  <div class="roast-fields">
+    <input type="text" id="victim-name" placeholder="Victim's name 😈" maxlength="40" />
+    <input type="text" id="victim-job"  placeholder="Job / role" maxlength="40" />
+  </div>
+  <textarea class="roast-desc" id="victim-desc" placeholder="Their habits, quirks, what they did tonight... more detail = more savage 👀"></textarea>
+  <div class="intensity-row">
+    <span class="intensity-label">Heat</span>
+    <input type="range" class="intensity-slider" id="roast-intensity" min="1" max="3" value="2" oninput="updateIntensity(this.value)" />
+    <span class="intensity-val" id="intensity-label">🌶️ Medium</span>
+  </div>
+  <button id="roast-fire-btn" onclick="fireRoast()">🔥 ROAST THEM! 🔥</button>
+</div>
+
+<!-- Voice panel -->
+<div id="voice-panel">
+  <!-- Orb with ripples -->
+  <div class="voice-orb-wrap">
+    <div class="ring ring1" id="ring1"></div>
+    <div class="ring ring2" id="ring2"></div>
+    <div class="ring ring3" id="ring3"></div>
+    <div class="voice-orb" id="voice-orb" onclick="toggleListening()">🎙️</div>
+  </div>
+
+  <!-- Bot speaking wave (hidden by default) -->
+  <div class="voice-wave" id="voice-wave" style="display:none;">
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="wave-bar"></div>
+  </div>
+
+  <div class="voice-status" id="voice-status">TAP ORB TO SPEAK</div>
+  <div class="voice-transcript" id="voice-transcript">Your words will appear here...</div>
+  <div class="voice-hint" id="voice-hint">Tap the orb → speak → LaughBot responds out loud 😂<br/>Use 🔊 in the header to toggle bot voice on/off</div>
+</div>
+
+<!-- Input bar -->
+<div id="input-area">
+  <textarea id="user-input" placeholder="Type anything... 🎯" rows="1"></textarea>
+  <button id="mic-btn" onclick="toggleListening()" title="Hold to speak">🎤</button>
+  <button id="send-btn" onclick="sendMessage()">🚀</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   PROMPTS
+══════════════════════════════════════════════ */
+const CHAT_SYSTEM = `You are LaughBot, the undisputed funniest AI comedian on Earth, performing LIVE at a party.
+
+STYLE:
+- EVERY response must be funny. No exceptions.
+- Puns, one-liners, absurd analogies, South African humour, comic timing.
+- Layer jokes: a punchline then a callback that hits harder.
+- Use emojis strategically 😂🎤🔥
+- SHORT and punchy — 3 to 6 lines max. Comedians know timing.
+- CLEAN party humour only — never offensive, racist, sexist, or crude.
+- End every response with: "🎤 *drops mic... picks it back up for more* 😏"`;
+
+const VOICE_SYSTEM = `You are LaughBot, the funniest AI comedian on Earth. You are in VOICE MODE — you are speaking out loud at a party.
+
+VOICE RULES:
+- Keep responses SHORT — 2 to 4 sentences max. Voice responses must be snappy.
+- No bullet points, no markdown, no asterisks, no emojis. Speak naturally.
+- Make every response funny and punchy — puns, one-liners, absurd comparisons.
+- South African cultural references are gold.
+- CLEAN humour only. Never offensive.
+- Do NOT say your sign-off line in voice mode. Just end naturally.`;
+
+const ROAST_SYSTEM = (intensity) => `You are LaughBot in ROAST MODE — the most feared comedy roaster at any South African party.
+
+INTENSITY: ${intensity}
+${intensity === 'Playful 😇' ? '- Light, affectionate teasing. Best friend energy. No below the belt.' : ''}
+${intensity === '🌶️ Medium' ? '- Savage observations, embarrassing truths, dramatic exaggeration. Funny, not cruel.' : ''}
+${intensity === '🔥 SAVAGE' ? '- Full nuclear roast. Merciless. Maximum embarrassment. STILL clean — no racism, sexism, slurs, or real cruelty.' : ''}
+
+RULES:
+- Make it PERSONAL to the details given. Generic = boring.
+- 4 to 6 punchy roast lines. Each must hit harder than the last.
+- Use comparisons, metaphors, absurd exaggerations.
+- End with one genuine redemption compliment wrapped in a joke.
+- NEVER use racism, sexism, or health body-shaming.
+- Final line: "🎤 That is a ROAST! Somebody call the fire brigade! 🔥"`;
+
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+let apiKey        = localStorage.getItem('lb_key') || '';
+let isLoading     = false;
+let currentMode   = 'chat';
+let speakerOn     = true;
+let isListening   = false;
+let isSpeaking    = false;
+let recognition   = null;
+let speechSynth   = window.speechSynthesis;
+let conversationHistory = [];
+const intensityLabels = {1:'Playful 😇', 2:'🌶️ Medium', 3:'🔥 SAVAGE'};
+
+if (apiKey) document.getElementById('api-key-input').value = apiKey;
+
+/* ══════════════════════════════════════════════
+   MODE
+══════════════════════════════════════════════ */
+function setMode(mode) {
+  // Stop any ongoing listening/speaking when switching
+  stopListening();
+  stopSpeaking();
+
+  currentMode = mode;
+  document.body.classList.remove('roast-mode', 'voice-active');
+  if (mode === 'roast') document.body.classList.add('roast-mode');
+  if (mode === 'voice') document.body.classList.add('voice-active');
+
+  document.getElementById('chat-mode-btn').classList.toggle('active',  mode === 'chat');
+  document.getElementById('roast-mode-btn').classList.toggle('active', mode === 'roast');
+  document.getElementById('voice-mode-btn').classList.toggle('active', mode === 'voice');
+
+  const logos = { chat:'🎤 LaughBot', roast:'🔥 RoastBot', voice:'🎙️ VoiceBot' };
+  const tags  = { chat:"World's Funniest AI", roast:'Destroy them with comedy', voice:'Talk to me, I talk back' };
+  document.getElementById('header-logo').textContent = logos[mode];
+  document.getElementById('header-tag').textContent  = tags[mode];
+
+  const inputPlaceholders = { chat:'Throw me any word or topic... 🎯', roast:'...or type while in roast mode', voice:'...or type to chat while in voice mode' };
+  document.getElementById('user-input').placeholder = inputPlaceholders[mode];
+}
+
+/* ══════════════════════════════════════════════
+   SPEAKER TOGGLE
+══════════════════════════════════════════════ */
+function toggleSpeaker() {
+  speakerOn = !speakerOn;
+  const btn = document.getElementById('speaker-btn');
+  btn.textContent = speakerOn ? '🔊' : '🔇';
+  btn.classList.toggle('on', speakerOn);
+  if (!speakerOn) stopSpeaking();
+  showToast(speakerOn ? '🔊 Voice output ON' : '🔇 Voice output OFF');
+}
+
+/* ══════════════════════════════════════════════
+   SPEECH RECOGNITION
+══════════════════════════════════════════════ */
+function initRecognition() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) { showToast('⚠️ Speech recognition not supported in this browser. Try Chrome.'); return null; }
+
+  const rec = new SpeechRec();
+  rec.continuous     = false;
+  rec.interimResults = true;
+  rec.lang           = 'en-ZA'; // South African English, falls back to en-US if unavailable
+
+  rec.onstart = () => {
+    isListening = true;
+    setListeningUI(true);
+  };
+
+  rec.onresult = (e) => {
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    const display = final || interim;
+    document.getElementById('voice-transcript').textContent = display || 'Listening...';
+    document.getElementById('user-input').value = display;
+
+    if (final) {
+      stopListening();
+      if (final.trim()) sendMessage();
+    }
+  };
+
+  rec.onerror = (e) => {
+    isListening = false;
+    setListeningUI(false);
+    if (e.error !== 'aborted') showToast('🎤 Mic error: ' + e.error);
+  };
+
+  rec.onend = () => {
+    isListening = false;
+    setListeningUI(false);
+  };
+
+  return rec;
+}
+
+function toggleListening() {
+  if (!apiKey) { showToast('⚠️ Enter your API key first!'); return; }
+  if (isSpeaking) { stopSpeaking(); return; }
+
+  if (isListening) {
+    stopListening();
+  } else {
+    startListening();
+  }
+}
+
+function startListening() {
+  stopSpeaking();
+  recognition = initRecognition();
+  if (!recognition) return;
+  document.getElementById('voice-transcript').textContent = 'Listening...';
+  recognition.start();
+}
+
+function stopListening() {
+  if (recognition) { try { recognition.abort(); } catch(e){} recognition = null; }
+  isListening = false;
+  setListeningUI(false);
+}
+
+function setListeningUI(on) {
+  const orb    = document.getElementById('voice-orb');
+  const status = document.getElementById('voice-status');
+  const micBtn = document.getElementById('mic-btn');
+  const rings  = [document.getElementById('ring1'), document.getElementById('ring2'), document.getElementById('ring3')];
+
+  if (on) {
+    orb.textContent = '🔴';
+    orb.style.borderColor = 'var(--pink)';
+    orb.style.boxShadow = '0 0 30px rgba(255,45,120,0.5)';
+    status.textContent = 'LISTENING...';
+    status.style.color = 'var(--pink)';
+    micBtn.classList.add('listening');
+    rings.forEach(r => r.style.borderColor = 'rgba(255,45,120,0.4)');
+  } else {
+    orb.textContent = '🎙️';
+    orb.style.borderColor = 'rgba(0,245,212,0.4)';
+    orb.style.boxShadow = '0 0 30px rgba(0,245,212,0.2)';
+    status.textContent = isSpeaking ? 'TALKING...' : 'TAP ORB TO SPEAK';
+    status.style.color = isSpeaking ? 'var(--neon)' : 'var(--cyan)';
+    micBtn.classList.remove('listening');
+    rings.forEach(r => r.style.borderColor = 'rgba(0,245,212,0.35)');
+  }
+}
+
+/* ══════════════════════════════════════════════
+   SPEECH SYNTHESIS (TTS)
+══════════════════════════════════════════════ */
+function speak(text) {
+  if (!speakerOn || !speechSynth) return;
+
+  // Strip markdown/emojis for cleaner speech
+  const clean = text
+    .replace(/[🎤🔥😂😏🎉🇿🇦🕯️🚗💡😩⚡🌶️👔😅🎧🥩💪😬🎙️]/gu, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/🎤 \*drops mic[^*]*\*/g, '')
+    .replace(/\n/g, ' ')
+    .trim();
+
+  if (!clean) return;
+
+  stopSpeaking();
+
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.rate   = 1.05;
+  utt.pitch  = 1.1;
+  utt.volume = 1;
+
+  // Pick a good English voice
+  const voices = speechSynth.getVoices();
+  const preferred = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('female'))
+                 || voices.find(v => v.lang.startsWith('en-ZA'))
+                 || voices.find(v => v.lang.startsWith('en-GB'))
+                 || voices.find(v => v.lang.startsWith('en'));
+  if (preferred) utt.voice = preferred;
+
+  utt.onstart = () => {
+    isSpeaking = true;
+    document.getElementById('voice-orb').textContent = '🔊';
+    document.getElementById('voice-orb').style.borderColor = 'var(--neon)';
+    document.getElementById('voice-orb').style.boxShadow = '0 0 30px rgba(247,226,51,0.5)';
+    document.getElementById('voice-status').textContent = 'TALKING...';
+    document.getElementById('voice-status').style.color = 'var(--neon)';
+    document.getElementById('voice-wave').style.display = 'flex';
+    // Mark the latest bot bubble as speaking
+    const bubbles = document.querySelectorAll('.bubble-wrap.bot');
+    if (bubbles.length) bubbles[bubbles.length-1].classList.add('speaking');
+  };
+
+  utt.onend = utt.onerror = () => {
+    isSpeaking = false;
+    document.getElementById('voice-orb').textContent = '🎙️';
+    document.getElementById('voice-orb').style.borderColor = 'rgba(0,245,212,0.4)';
+    document.getElementById('voice-orb').style.boxShadow = '0 0 30px rgba(0,245,212,0.2)';
+    document.getElementById('voice-status').textContent = 'TAP ORB TO SPEAK';
+    document.getElementById('voice-status').style.color = 'var(--cyan)';
+    document.getElementById('voice-wave').style.display = 'none';
+    document.querySelectorAll('.bubble-wrap.bot.speaking').forEach(b => b.classList.remove('speaking'));
+    // In voice mode, auto-start listening again after bot finishes
+    if (currentMode === 'voice' && speakerOn) {
+      setTimeout(() => { if (!isLoading) startListening(); }, 400);
+    }
+  };
+
+  speechSynth.speak(utt);
+}
+
+function stopSpeaking() {
+  if (speechSynth) speechSynth.cancel();
+  isSpeaking = false;
+  document.getElementById('voice-wave').style.display = 'none';
+  document.querySelectorAll('.bubble-wrap.bot.speaking').forEach(b => b.classList.remove('speaking'));
+}
+
+/* ══════════════════════════════════════════════
+   API KEY
+══════════════════════════════════════════════ */
+function saveKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val.startsWith('sk-ant-') && !val.startsWith('sk-')) {
+    showToast("⚠️ That doesn't look like an Anthropic key!"); return;
+  }
+  apiKey = val;
+  localStorage.setItem('lb_key', apiKey);
+  document.getElementById('key-banner').style.background = 'rgba(0,245,212,0.06)';
+  showToast("✅ Key saved! Let's get this party started!");
+  removeWelcome();
+  const msg = "OH SNAP! 🎉 I'm LaughBot — funniest AI on Earth, certified party weapon. Chat me, roast your friends, or switch to Voice Mode and let's have a proper conversation! 🎤 *drops mic... picks it back up for more* 😏";
+  addBotMessage(msg, false);
+  if (speakerOn) speak(msg);
+}
+
+/* ══════════════════════════════════════════════
+   ROAST
+══════════════════════════════════════════════ */
+function fillVictim(name, desc) {
+  document.getElementById('victim-name').value = name;
+  document.getElementById('victim-desc').value = desc;
+  document.getElementById('victim-job').value  = '';
+}
+
+function updateIntensity(val) {
+  document.getElementById('intensity-label').textContent = intensityLabels[val];
+}
+
+async function fireRoast() {
+  if (isLoading) return;
+  if (!apiKey) { showToast('⚠️ Enter your Anthropic API key first!'); return; }
+
+  const name      = document.getElementById('victim-name').value.trim() || 'this mysterious person';
+  const job       = document.getElementById('victim-job').value.trim();
+  const desc      = document.getElementById('victim-desc').value.trim();
+  const intensity = intensityLabels[document.getElementById('roast-intensity').value];
+
+  if (!desc && name === 'this mysterious person') {
+    showToast('⚠️ Give me SOMETHING to work with! 😈'); return;
+  }
+
+  const prompt = `ROAST TARGET: ${name}${job ? ` (${job})` : ''}
+DETAILS: ${desc || 'No extra details — use their name and job creatively.'}
+INTENSITY: ${intensity}
+Now absolutely DESTROY them with a comedy roast!`;
+
+  removeWelcome();
+  addUserBubble(`🎯 Roasting: ${name} | Intensity: ${intensity}`);
+
+  isLoading = true;
+  document.getElementById('roast-fire-btn').disabled = true;
+  document.getElementById('send-btn').disabled = true;
+  stopSpeaking();
+  addTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 650,
+        system: ROAST_SYSTEM(intensity),
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) { removeTyping(); showToast('❌ ' + (data.error.message || 'API error')); return; }
+    const reply = data.content?.[0]?.text || "Even I'm speechless. 😂";
+    addBotMessage(reply, true, name);
+    if (speakerOn) speak(reply);
+  } catch {
+    removeTyping(); showToast('❌ Network error!');
+  } finally {
+    isLoading = false;
+    document.getElementById('roast-fire-btn').disabled = false;
+    document.getElementById('send-btn').disabled = false;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   CHAT SEND
+══════════════════════════════════════════════ */
+function quickSend(text) {
+  document.getElementById('user-input').value = text;
+  sendMessage();
+}
+
+async function sendMessage() {
+  if (isLoading) return;
+  const input = document.getElementById('user-input');
+  const text  = input.value.trim();
+  if (!text) return;
+  if (!apiKey) { showToast('⚠️ Enter your Anthropic API key first!'); return; }
+
+  input.value = ''; input.style.height = 'auto';
+  removeWelcome();
+  stopSpeaking();
+  addUserBubble(text);
+
+  // Voice mode uses its own shorter system prompt and doesn't keep long history
+  const isVoice = currentMode === 'voice';
+  const systemPrompt = isVoice ? VOICE_SYSTEM : CHAT_SYSTEM;
+
+  if (!isVoice) conversationHistory.push({ role: 'user', content: text });
+  const messages = isVoice ? [{ role: 'user', content: text }] : conversationHistory;
+
+  isLoading = true;
+  document.getElementById('send-btn').disabled = true;
+  document.getElementById('mic-btn').disabled  = true;
+  addTyping();
+
+  // Update voice panel
+  if (isVoice) {
+    document.getElementById('voice-status').textContent = 'THINKING...';
+    document.getElementById('voice-status').style.color = 'var(--purple)';
+    document.getElementById('voice-orb').textContent = '🤔';
+  }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: isVoice ? 200 : 500,
+        system: systemPrompt,
+        messages
+      })
+    });
+    const data = await res.json();
+    if (data.error) { removeTyping(); showToast('❌ ' + (data.error.message || 'API error')); if (!isVoice) conversationHistory.pop(); return; }
+
+    const reply = data.content?.[0]?.text || "I'm laughing too hard to reply! 😂";
+    if (!isVoice) conversationHistory.push({ role: 'assistant', content: reply });
+    addBotMessage(reply, false);
+
+    // Speak the reply
+    if (speakerOn) {
+      speak(reply);
+    } else if (isVoice) {
+      // If speaker off in voice mode, auto-listen again
+      document.getElementById('voice-status').textContent = 'TAP ORB TO SPEAK';
+      document.getElementById('voice-status').style.color = 'var(--cyan)';
+      document.getElementById('voice-orb').textContent = '🎙️';
+    }
+
+    if (isVoice) {
+      document.getElementById('voice-transcript').textContent = 'Your words will appear here...';
+    }
+  } catch {
+    removeTyping(); showToast('❌ Network error!');
+    if (!isVoice) conversationHistory.pop();
+  } finally {
+    isLoading = false;
+    document.getElementById('send-btn').disabled  = false;
+    document.getElementById('mic-btn').disabled   = false;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   DOM HELPERS
+══════════════════════════════════════════════ */
+function removeWelcome() { const w = document.getElementById('welcome'); if (w) w.remove(); }
+
+function addUserBubble(text) {
+  const w = document.createElement('div');
+  w.className = 'bubble-wrap user';
+  w.innerHTML = `<div class="sender-name">You 😈</div><div class="bubble">${esc(text)}</div>`;
+  document.getElementById('messages').appendChild(w);
+  scrollBottom();
+}
+
+function addBotMessage(text, isRoast = false, victimName = '') {
+  removeTyping();
+  const w = document.createElement('div');
+  w.className = `bubble-wrap bot${isRoast ? ' roast' : ''}`;
+  const tag = isRoast ? `<div class="roast-tag">🔥 ROASTING ${esc(victimName.toUpperCase())}</div>` : '';
+  const icon = isRoast ? '🔥 RoastBot' : currentMode === 'voice' ? '🎙️ VoiceBot' : '🎤 LaughBot';
+  w.innerHTML = `<div class="sender-name">${icon}</div>${tag}<div class="bubble">${fmt(text)}</div>`;
+  document.getElementById('messages').appendChild(w);
+  scrollBottom();
+}
+
+function addTyping() {
+  removeTyping();
+  const labels = { chat:'💭 cooking up gold...', roast:'🔥 loading the fire...', voice:'🤔 thinking...' };
+  const icons  = { chat:'🎤 LaughBot', roast:'🔥 RoastBot', voice:'🎙️ VoiceBot' };
+  const w = document.createElement('div');
+  w.id = 'typing-indicator'; w.className = 'bubble-wrap bot';
+  w.innerHTML = `
+    <div class="sender-name">${icons[currentMode]}</div>
+    <div class="typing-bubble">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <span style="font-size:0.77rem;color:var(--muted);margin-left:4px;font-weight:700;">${labels[currentMode]}</span>
+    </div>`;
+  document.getElementById('messages').appendChild(w);
+  scrollBottom();
+}
+
+function removeTyping() { const t = document.getElementById('typing-indicator'); if (t) t.remove(); }
+function scrollBottom()  { const m = document.getElementById('messages'); m.scrollTop = m.scrollHeight; }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function esc(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmt(t) {
+  return esc(t)
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/\n/g,'<br/>');
+}
+
+/* ══════════════════════════════════════════════
+   INPUT EVENTS
+══════════════════════════════════════════════ */
+document.getElementById('user-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+document.getElementById('user-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+// Pre-load voices (browsers need this)
+if (speechSynth) {
+  speechSynth.getVoices();
+  speechSynth.onvoiceschanged = () => speechSynth.getVoices();
+}
+
+// Init speaker button state
+document.getElementById('speaker-btn').classList.add('on');
+</script>
+</body>
+</html>
